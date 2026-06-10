@@ -1,0 +1,27 @@
+# 3. Scale Up Web Infrastructure Design
+
+## Architectural Diagram Description (High Availability & Split Layer)
+This architecture achieves full component decoupling and high availability by isolating roles onto dedicated server nodes and forming high-availability clusters:
+
+1. **High Availability Ingress**: The user connects via HTTPS. Instead of one load balancer, traffic hits a **Load Balancer Cluster** (Two HAProxy nodes configured in a cluster using a protocol like Keepalived/VRRP with a shared Virtual IP).
+2. **Decoupled Web Server Layer**: The active HAProxy node routes traffic to a dedicated **Web Server Node (Nginx)**. This server only manages HTTP handshakes, SSL decryption, and static asset delivery.
+3. **Decoupled Application Layer**: Nginx proxies dynamic processing requests down to a completely separate, dedicated **Application Server Node** executing the codebase core.
+4. **Isolated Database Layer**: The Application Server runs query cycles against an isolated **Database Server Node (MySQL)** running on its own dedicated physical hardware resources.
+
+---
+
+## Specifics Explanations
+
+* **Why every additional element is added:**
+
+  - **Second Load Balancer (HAProxy Cluster)**:
+    We added a second load balancer configured as a high-availability cluster with the first one. This completely removes the single point of failure (SPOF) at the ingress layer. Using a virtual IP and floating mechanisms (like Keepalived), if the primary HAProxy node drops, the secondary instance instantly assumes traffic processing without dropping active TCP connections.
+
+  - **Split Components onto Their Own Dedicated Servers (Web, App, Database)**:
+    In previous tasks, running Nginx, the Application Server, and MySQL on the same machine caused severe resource contention. We have now decoupled them into separate layers:
+    1. **Dedicated Web Server Server**: Now completely isolated to optimize network I/O, concurrent connections, and immediate response delivery.
+    2. **Dedicated Application Server Server**: Isolated to dedicate 100% of its CPU and RAM cycles to heavy business logic processing and thread execution without being choked by database indexing.
+    3. **Dedicated Database Server Server**: Isolated to allow MySQL to aggressively utilize disk caching, buffer pools, and high-speed I/O operations without sharing resources with the web application.
+
+  - **Additional Server Node for Horizontal Scaling**:
+    Adding another bare node into the topology allows us to duplicate either the web or application layer seamlessly, allowing the infrastructure to scale horizontally as concurrent global request traffic volumes grow.
