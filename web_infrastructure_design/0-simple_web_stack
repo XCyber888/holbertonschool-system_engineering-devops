@@ -1,0 +1,50 @@
+# 0. Simple Web Stack Infrastructure Design
+
+## Architectural Diagram Description (Whiteboard Design)
+When a user wants to access the website `www.foobar.com`, the network communication follows this sequential path:
+
+1. **User Request Initiated**: The user enters `http://www.foobar.com` into their web browser.
+2. **DNS Resolution**: The computer queries the Domain Name System (DNS) to resolve the domain name `www.foobar.com` into an IP address. The DNS server finds the configured **A record** for `www` pointing to `8.8.8.8`.
+3. **HTTP/HTTPS Connection**: The browser establishes a connection over the network to the physical/virtual Server located at IP address `8.8.8.8` using the **TCP/IP** protocol suite.
+4. **Web Server Processing**: Inside the server, **Nginx** (the Web Server) listens for incoming requests on port 80. It receives the HTTP request and handles static content directly, or passes dynamic routing requests to the Application Server.
+5. **Application Server Execution**: The **Application Server** executes the backend code (the codebase/application files) to process logic, handle user data, and render templates.
+6. **Database Query**: If the application logic requires persistence or dynamic data retrieval, the Application Server communicates with **MySQL** (the Database) via SQL queries.
+7. **Response Cycle**: The database returns the data to the application server, which generates the HTML payload. The application server passes this payload back to Nginx, and Nginx transmits the HTTP response back to the user's browser over the network.
+
+---
+
+## Specifics Explanations
+
+* **What is a server?**
+  A server is a physical computer, a virtual machine, or a software program dedicated to providing specific functionalities, computational resources, or data access for other computer programs or devices, known as "clients".
+
+* **What is the role of the domain name?**
+  A domain name (e.g., `foobar.com`) provides a human-readable, easily memorable cryptographic alias for an unmemorable numeric IP address (e.g., `8.8.8.8`).
+
+* **What type of DNS record www is in www.foobar.com?**
+  The `www` record in this specific configuration is an **A record (Address Record)** because it maps a domain/subdomain directly to a physical IPv4 address (`8.8.8.8`).
+
+* **What is the role of the web server?**
+  The web server (**Nginx**) manages low-level network traffic and HTTP/HTTPS protocol handshakes. Its role is to accept requests from clients, serve static files (HTML, CSS, JS, images), manage security parameters, and act as a reverse proxy.
+
+* **What is the role of the application server?**
+  The application server operates the dynamic logic layer of the platform. It executes the core software codebase, interprets data models, communicates with the database, and processes business logic.
+
+* **What is the role of the database?**
+  The database (**MySQL**) serves as a structured relational storage system for persistent data. Its role is to safely organize, store, index, update, and retrieve user records and application states.
+
+* **What is the server using to communicate with the computer of the user requesting the website?**
+  The server communicates with the user's computer via the internet infrastructure utilizing the **TCP/IP** protocol suite, specifically operating through the application layer protocol **HTTP**.
+
+---
+
+## Infrastructure Flaws and Issues
+
+1. **SPOF (Single Point of Failure)**:
+   This entire infrastructure is concentrated on one physical machine. If any critical hardware or software error occurs, the entire website goes offline instantly.
+
+2. **Downtime During Maintenance**:
+   Since all processes (Nginx, App, MySQL) live on the same node, any routine system maintenance or code deployment requires service restarts, causing immediate downtime.
+
+3. **Inability to Scale**:
+   This system is limited to vertical scaling. If a massive spike in concurrent traffic hits `www.foobar.com`, the resources of this single machine will quickly become saturated, leading to slow response times and crashes.
